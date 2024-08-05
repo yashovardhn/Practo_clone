@@ -16,7 +16,7 @@ def register_doctor(request):
             return redirect('doctor_dashboard')
     else:
         form = DoctorRegistrationForm()
-    return render(request, 'register_doctor.html', {'form': form})
+    return render(request, 'myapp/register_doctor.html', {'form': form})
 
 def register_patient(request):
     if request.method == 'POST':
@@ -30,16 +30,16 @@ def register_patient(request):
             return redirect('patient_dashboard')
     else:
         form = PatientRegistrationForm()
-    return render(request, 'register_patient.html', {'form': form})
+    return render(request, 'myapp/register_patient.html', {'form': form})
 
 def doctor_dashboard(request):
     appointments = Appointment.objects.filter(doctor__user=request.user)
     schedule = Schedule.objects.filter(doctor__user=request.user)
-    return render(request, 'doctor_dashboard.html', {'appointments': appointments, 'schedule': schedule})
+    return render(request, 'myapp/doctor_dashboard.html', {'appointments': appointments, 'schedule': schedule})
 
 def patient_dashboard(request):
     appointments = Appointment.objects.filter(patient__user=request.user)
-    return render(request, 'patient_dashboard.html', {'appointments': appointments})
+    return render(request, 'myapp/patient_dashboard.html', {'appointments': appointments})
 
 def add_prescription(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
@@ -50,7 +50,7 @@ def add_prescription(request, appointment_id):
             return redirect('doctor_dashboard')
     else:
         form = PrescriptionForm(instance=appointment)
-    return render(request, 'add_prescription.html', {'form': form})
+    return render(request, 'myapp/add_prescription.html', {'form': form})
 
 
 # Create your views here.
