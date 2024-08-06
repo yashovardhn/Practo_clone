@@ -4,9 +4,14 @@
 
 {% block content %}
 <div class="container">
-    <h2 class="title">{{ doctor.user.username }}</h2>
-    <p><strong>Specialization:</strong> {{ doctor.specialization }}</p>
-    <p><strong>Experience:</strong> {{ doctor.experience }} years</p>
-    <p><strong>Contact:</strong> {{ doctor.user.email }}</p>
+    <section class="section">
+        <div class="box">
+            <h2 class="title">{{ doctor.user.username }}</h2>
+            <p><strong>Specialization:</strong> {{ doctor.specialization }}</p>
+            <p><strong>Experience:</strong> {{ doctor.experience }} years</p>
+            <p><strong>Contact:</strong> {{ doctor.user.email }}</p>
+            <a class="button is-primary" href="{% url 'book_appointment' doctor.user.id %}">Book Appointment</a>
+        </div>
+    </section>
 </div>
 {% endblock %}

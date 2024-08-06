@@ -5,19 +5,17 @@ from .models import User, Doctor, Patient, Appointment, Schedule
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import os
-from django.http import HttpResponse, FileResponse
-# myapp/views.py
-
+from django.http import HttpResponse, FileResponse, Http404
+from django.utils.http import http_date
+from django.core.files.storage import default_storage
 
 def doctor_list(request):
     doctors = Doctor.objects.all()
     return render(request, 'myapp/doctor_list.html', {'doctors': doctors})
 
-
 def doctor_detail(request, user_id):
     doctor = get_object_or_404(Doctor, user__id=user_id)
     return render(request, 'myapp/doctor_detail.html', {'doctor': doctor})
-
 
 def register_doctor(request):
     if request.method == 'POST':
@@ -95,13 +93,14 @@ def logout_user(request):
 
 @login_required(login_url='login')
 def book_appointment(request, doctor_id):
-    doctor = get_object_or_404(Doctor, id=doctor_id)
+    doctor = get_object_or_404(Doctor, user__id=doctor_id)
     if request.method == 'POST':
         form = AppointmentForm(request.POST)
         if form.is_valid():
             appointment = form.save(commit=False)
             appointment.doctor = doctor
-            appointment.patient = Patient.objects.get(user=request.user)
+            appointment.patient = get_object_or_404(Patient, user=request.user)
+            appointment.status = 'pending'
             appointment.save()
             return redirect('patient_dashboard')
     else:
@@ -109,10 +108,19 @@ def book_appointment(request, doctor_id):
     return render(request, 'myapp/book_appointment.html', {'form': form, 'doctor': doctor})
 
 @login_required(login_url='login')
-def download_prescription(request, appointment_id):
-    appointment = get_object_or_404(Appointment, id=appointment_id)
-    if appointment.prescription_file:
-        file_path = os.path.join(settings.MEDIA_ROOT, appointment.prescription_file.name)
-        return FileResponse(open(file_path, 'rb'), as_attachment=True)
-    else:
-        return HttpResponse("No prescription file available", status=404)
+def download_prescription(request, id):
+    try:
+        appointment = Appointment.objects.get(id=id)
+        if appointment.prescription_file:
+            file_path = default_storage.path(appointment.prescription_file.name)
+            if os.path.exists(file_path):
+                response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+                response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+                response['Content-Length'] = os.path.getsize(file_path)
+                return response
+            else:
+                raise Http404("Prescription file not found")
+        else:
+            raise Http404("No prescription file available")
+    except Appointment.DoesNotExist:
+        raise Http404("Appointment does not exist")
