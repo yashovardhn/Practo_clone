@@ -1,26 +1,36 @@
-<h2>Patient Dashboard</h2>
-<h3>Appointments</h3>
-<table>
-    <tr>
-        <th>Doctor</th>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Status</th>
-        <th>Rating</th>
-        <th>Prescription</th>
-    </tr>
-    {% for appointment in appointments %}
-    <tr>
-        <td>{{ appointment.doctor.user.username }}</td>
-        <td>{{ appointment.date }}</td>
-        <td>{{ appointment.time }}</td>
-        <td>{{ appointment.status }}</td>
-        <td>{{ appointment.rating }}</td>
-        <td>
-            {% if appointment.prescription_file %}
-                <a href="{{ appointment.prescription_file.url }}">Download</a>
-            {% endif %}
-        </td>
-    </tr>
-    {% endfor %}
+{% extends "myapp/base.html" %}
+
+{% block title %}Patient Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="title">Patient Dashboard</h2>
+<h3 class="subtitle">Appointments</h3>
+<table class="table is-fullwidth is-striped">
+    <thead>
+        <tr>
+            <th>Doctor</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Rating</th>
+            <th>Prescription</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for appointment in appointments %}
+        <tr>
+            <td>{{ appointment.doctor.user.username }}</td>
+            <td>{{ appointment.date }}</td>
+            <td>{{ appointment.time }}</td>
+            <td>{{ appointment.status }}</td>
+            <td>{{ appointment.rating }}</td>
+            <td>
+                {% if appointment.prescription_file %}
+                    <a class="button is-small is-link" href="{{ appointment.prescription_file.url }}">Download</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
+{% endblock %}

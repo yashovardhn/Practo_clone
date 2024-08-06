@@ -1,5 +1,19 @@
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Register</button>
-</form>
+{% extends "myapp/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Register as Doctor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="title">Register as Doctor</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form|crispy }}
+        <div class="field">
+            <div class="control">
+                <button class="button is-primary" type="submit">Register</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

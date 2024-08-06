@@ -1,5 +1,18 @@
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Add Prescription</button>
-</form>
+{% extends "myapp/base.html" %}
+
+{% block title %}Add Prescription{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="title">Add Prescription</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <div class="field">
+            <div class="control">
+                <button class="button is-primary" type="submit">Save</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

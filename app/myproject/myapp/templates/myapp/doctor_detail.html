@@ -1,0 +1,12 @@
+{% extends "myapp/base.html" %}
+
+{% block title %}Doctor Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="title">{{ doctor.user.username }}</h2>
+    <p><strong>Specialization:</strong> {{ doctor.specialization }}</p>
+    <p><strong>Experience:</strong> {{ doctor.experience }} years</p>
+    <p><strong>Contact:</strong> {{ doctor.user.email }}</p>
+</div>
+{% endblock %}

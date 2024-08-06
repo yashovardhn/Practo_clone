@@ -1,32 +1,42 @@
-<h2>Doctor Dashboard</h2>
-<h3>Appointments</h3>
-<table>
-    <tr>
-        <th>Patient</th>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Status</th>
-        <th>Rating</th>
-        <th>Prescription</th>
-        <th>Action</th>
-    </tr>
-    {% for appointment in appointments %}
-    <tr>
-        <td>{{ appointment.patient.user.username }}</td>
-        <td>{{ appointment.date }}</td>
-        <td>{{ appointment.time }}</td>
-        <td>{{ appointment.status }}</td>
-        <td>{{ appointment.rating }}</td>
-        <td>
-            {% if appointment.prescription_file %}
-                <a href="{{ appointment.prescription_file.url }}">Download</a>
-            {% endif %}
-        </td>
-        <td>
-            {% if appointment.status == 'completed' %}
-                <a href="{% url 'add_prescription' appointment.id %}">Add Prescription</a>
-            {% endif %}
-        </td>
-    </tr>
-    {% endfor %}
+{% extends "myapp/base.html" %}
+
+{% block title %}Doctor Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="title">Doctor Dashboard</h2>
+<h3 class="subtitle">Appointments</h3>
+<table class="table is-fullwidth is-striped">
+    <thead>
+        <tr>
+            <th>Patient</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Rating</th>
+            <th>Prescription</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for appointment in appointments %}
+        <tr>
+            <td>{{ appointment.patient.user.username }}</td>
+            <td>{{ appointment.date }}</td>
+            <td>{{ appointment.time }}</td>
+            <td>{{ appointment.status }}</td>
+            <td>{{ appointment.rating }}</td>
+            <td>
+                {% if appointment.prescription_file %}
+                    <a class="button is-small is-link" href="{{ appointment.prescription_file.url }}">Download</a>
+                {% endif %}
+            </td>
+            <td>
+                {% if appointment.status == 'completed' %}
+                    <a class="button is-small is-primary" href="{% url 'add_prescription' appointment.id %}">Add Prescription</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
+{% endblock %}
