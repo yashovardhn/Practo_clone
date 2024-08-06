@@ -1,9 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
-from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm
+from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm, AppointmentForm
 from .models import User, Doctor, Patient, Appointment, Schedule
 from django.contrib.auth.decorators import login_required
-
+from django.conf import settings
+import os
+from django.http import HttpResponse, FileResponse
 # myapp/views.py
 
 
@@ -90,3 +92,27 @@ def add_prescription(request, appointment_id):
 def logout_user(request):
     logout(request)
     return redirect('login')
+
+@login_required(login_url='login')
+def book_appointment(request, doctor_id):
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    if request.method == 'POST':
+        form = AppointmentForm(request.POST)
+        if form.is_valid():
+            appointment = form.save(commit=False)
+            appointment.doctor = doctor
+            appointment.patient = Patient.objects.get(user=request.user)
+            appointment.save()
+            return redirect('patient_dashboard')
+    else:
+        form = AppointmentForm()
+    return render(request, 'myapp/book_appointment.html', {'form': form, 'doctor': doctor})
+
+@login_required(login_url='login')
+def download_prescription(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id)
+    if appointment.prescription_file:
+        file_path = os.path.join(settings.MEDIA_ROOT, appointment.prescription_file.name)
+        return FileResponse(open(file_path, 'rb'), as_attachment=True)
+    else:
+        return HttpResponse("No prescription file available", status=404)
