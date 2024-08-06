@@ -3,36 +3,47 @@
 {% block title %}Patient Dashboard{% endblock %}
 
 {% block content %}
-<h2 class="title">Patient Dashboard</h2>
-<h3 class="subtitle">Appointments</h3>
-<table class="table is-fullwidth is-striped">
-    <thead>
-        <tr>
-            <th>Doctor</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Status</th>
-            <th>Rating</th>
-            <th>Prescription</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for appointment in appointments %}
-        <tr>
-            <td>{{ appointment.doctor.user.username }}</td>
-            <td>{{ appointment.date }}</td>
-            <td>{{ appointment.time }}</td>
-            <td>{{ appointment.status }}</td>
-            <td>{{ appointment.rating }}</td>
-            <td>
-                {% if appointment.prescription_file %}
-                    <a class="button is-small is-link" href="{{ appointment.prescription_file.url }}">Download</a>
-                {% else %}
-                    <span>No Prescription</span>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<section class="section">
+    <div class="container">
+        <h2 class="title">Patient Dashboard</h2>
+        <h3 class="subtitle">Appointments</h3>
+
+        <table class="table is-fullwidth is-striped">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Rating</th>
+                    <th>Prescription</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in appointments %}
+                <tr>
+                    <td>{{ appointment.doctor.user.username }}</td>
+                    <td>{{ appointment.date }}</td>
+                    <td>{{ appointment.time }}</td>
+                    <td>{{ appointment.status }}</td>
+                    <td>{{ appointment.rating|default:"No Rating" }}</td>
+                    <td>
+                        {% if appointment.prescription_file %}
+                            <a class="button is-small is-link" href="{{ appointment.prescription_file.url }}">Download</a>
+                        {% else %}
+                            <span class="tag is-warning">No Prescription</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if appointment.status == 'completed' and not appointment.rating %}
+                            <a class="button is-small is-warning" href="{% url 'rate_appointment' appointment.id %}">Rate Doctor</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% endblock %}

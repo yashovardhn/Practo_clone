@@ -1,0 +1,25 @@
+{% extends "myapp/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h2 class="title">Rate Appointment</h2>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="field">
+                <label class="label" for="{{ form.rating.id_for_label }}">Rating</label>
+                <div class="control">
+                    {{ form.rating|as_crispy_field }}
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <button type="submit" class="button is-primary">Submit Rating</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

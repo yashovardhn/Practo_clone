@@ -28,3 +28,11 @@ class AppointmentForm(forms.ModelForm):
     class Meta:
         model = Appointment
         fields = ['date', 'time']
+
+class RatingForm(forms.ModelForm):
+    class Meta:
+        model = Appointment
+        fields = ['rating']
+        widgets = {
+            'rating': forms.TextInput(attrs={'class': 'input'}),
+        }

@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
-from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm, AppointmentForm
+from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm, AppointmentForm, RatingForm
 from .models import User, Doctor, Patient, Appointment, Schedule
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
@@ -124,3 +124,17 @@ def download_prescription(request, id):
             raise Http404("No prescription file available")
     except Appointment.DoesNotExist:
         raise Http404("Appointment does not exist")
+
+
+def rate_appointment(request, pk):
+    appointment = get_object_or_404(Appointment, pk=pk)
+
+    if request.method == 'POST':
+        form = RatingForm(request.POST, instance=appointment)
+        if form.is_valid():
+            form.save()
+            return redirect('patient_dashboard')  # Redirect to the dashboard or another appropriate page
+    else:
+        form = RatingForm(instance=appointment)
+
+    return render(request, 'myapp/rate_appointment.html', {'form': form})
