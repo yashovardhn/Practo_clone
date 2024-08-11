@@ -7,9 +7,9 @@
 </head>
 <body>
 
-<h1>Practo Clone</h1>
+<h1>ProjHub</h1>
 
-<p>A Django-based web application that replicates the core functionality of Practo, allowing users to book appointments with doctors, manage patient records, and handle prescription uploads.</p>
+<p>A Django-based web application that replicates the core functionality of ProjHub, allowing users to book appointments with doctors, manage patient records, and handle prescription uploads.</p>
 
 <h2>Features</h2>
 <ul>
