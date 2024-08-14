@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'crispy_forms', 
+    'crispy_bootstrap5',
     'widget_tweaks',
     'myapp',
 ]
@@ -61,6 +62,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 
 
@@ -104,7 +106,8 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 # CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_ALLOWED_TEMPLATE_PACKS = ['bootstrap5']
-CRISPY_TEMPLATE_PACK = "bootstrap5"
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
+
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

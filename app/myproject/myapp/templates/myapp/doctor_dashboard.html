@@ -27,12 +27,14 @@
             <td>{{ appointment.rating }}</td>
             <td>
                 {% if appointment.prescription_file %}
-                    <a class="button is-small is-link" href="{{ appointment.prescription_file.url }}">Download</a>
+                    <a class="button is-small is-link" href="{% url 'download_prescription' appointment.id %}">Download</a>
+                {% else %}
+                    No Prescription
                 {% endif %}
             </td>
             <td>
                 {% if appointment.status == 'completed' %}
-                    <a class="button is-small is-primary" href="{% url 'add_prescription' appointment.id %}">Add Prescription</a>
+                    <a class="button is-small is-primary" href="{% url 'upload_prescription' appointment.id %}">Add Prescription</a>
                 {% elif appointment.status == 'pending' %}
                     <form action="{% url 'update_status' appointment.id %}" method="post" style="display:inline;">
                         {% csrf_token %}
@@ -46,6 +48,10 @@
                     </form>
                 {% endif %}
             </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7">No appointments available.</td>
         </tr>
         {% endfor %}
     </tbody>

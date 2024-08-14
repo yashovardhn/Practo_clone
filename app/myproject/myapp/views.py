@@ -1,13 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, View
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, View, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm, AppointmentForm, RatingForm,PrescriptionFormSet, AppointmentStatusForm
+from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm, AppointmentForm, RatingForm
 from .models import User, Doctor, Patient, Appointment, Schedule, Prescription
 from django.urls import reverse_lazy
 from django.core.files.storage import default_storage
 from django.http import HttpResponse, FileResponse, Http404
 import os
+import logging
 
 class DoctorListView(ListView):
     model = Doctor
@@ -106,17 +107,18 @@ class PatientDashboardView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Appointment.objects.filter(patient__user=self.request.user)
 
-class AddPrescriptionView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        formset = PrescriptionFormSet(queryset=Prescription.objects.none())
-        return render(request, 'myapp/add_prescription.html', {'formset': formset})
+class UploadPrescriptionView(LoginRequiredMixin,FormView):
+    form_class = PrescriptionForm
+    template_name = 'myapp/add_prescription.html'
 
-    def post(self, request, *args, **kwargs):
-        formset = PrescriptionFormSet(request.POST, request.FILES)
-        if formset.is_valid():
-            formset.save()
-            return redirect('doctor_dashboard')
-        return render(request, 'myapp/add_prescription.html', {'formset': formset})
+    def form_valid(self, form):
+        appointment_id = self.kwargs.get('appointment_id')
+        appointment = get_object_or_404(Appointment, id=appointment_id)
+        prescription = form.save(commit=False)
+        prescription.appointment = appointment
+        prescription.save()
+        return redirect('doctor_dashboard')
+
 
 class BookAppointmentView(LoginRequiredMixin, CreateView):
     form_class = AppointmentForm
@@ -137,20 +139,23 @@ class DownloadPrescriptionView(LoginRequiredMixin, View):
 
     def get(self, request, id):
         try:
-            appointment = Appointment.objects.get(id=id)
-            if appointment.prescription_file:
-                file_path = default_storage.path(appointment.prescription_file.name)
-                if os.path.exists(file_path):
+            prescription = Prescription.objects.get(id=id)
+            if prescription.file:
+                file_path = default_storage.path(prescription.file.name)
+                logging.debug(f"File path: {file_path}")
+
+                if os.path.isfile(file_path):
                     response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
-                    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+                    response['Content-Disposition'] = f'inline; filename="{os.path.basename(file_path)}"'
                     response['Content-Length'] = os.path.getsize(file_path)
                     return response
                 else:
                     raise Http404("Prescription file not found")
             else:
                 raise Http404("No prescription file available")
-        except Appointment.DoesNotExist:
-            raise Http404("Appointment does not exist")
+        except Prescription.DoesNotExist:
+            raise Http404("Prescription does not exist")
+
 
 class RateAppointmentView(LoginRequiredMixin, UpdateView):
     model = Appointment

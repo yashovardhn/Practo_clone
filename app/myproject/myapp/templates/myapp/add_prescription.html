@@ -1,17 +1,20 @@
-{% extends "myapp/base.html" %}
-{% load crispy_forms_tags %}
-{% block title %}Add Prescription{% endblock %}
+{% extends 'myapp/base.html' %}
 
 {% block content %}
-<div class="container">
-    <h2 class="title">Add Prescription</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ formset.management_form }}
-        {% for form in formset %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Upload Prescription</h1>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
             {{ form.as_p }}
-        {% endfor %}
-        <button type="submit">Save Prescriptions</button>
-    </form>
-</div>
+
+            <div class="field">
+                <div class="control">
+                    <button type="submit" class="button is-primary">Upload Prescription</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
 {% endblock %}

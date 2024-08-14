@@ -26,8 +26,6 @@ class PrescriptionForm(forms.ModelForm):
         model = Prescription
         fields = ['file']
 
-PrescriptionFormSet = modelformset_factory(Prescription, form=PrescriptionForm, extra=1, can_delete=True)
-
 
 class AppointmentForm(forms.ModelForm):
     class Meta:
