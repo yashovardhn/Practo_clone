@@ -1,140 +1,176 @@
+from pyexpat.errors import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
-from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm, AppointmentForm, RatingForm
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, View, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm, AppointmentForm, RatingForm, AppointmentStatusForm
 from .models import User, Doctor, Patient, Appointment, Schedule
-from django.contrib.auth.decorators import login_required
-from django.conf import settings
-import os
-from django.http import HttpResponse, FileResponse, Http404
-from django.utils.http import http_date
+from django.urls import reverse_lazy, reverse
 from django.core.files.storage import default_storage
+from django.http import HttpResponse, FileResponse, Http404
+import os
+from itertools import zip_longest
 
-def doctor_list(request):
-    doctors = Doctor.objects.all()
-    return render(request, 'myapp/doctor_list.html', {'doctors': doctors})
+class DoctorListView(ListView):
+    model = Doctor
+    template_name = 'myapp/doctor_list.html'
+    context_object_name = 'doctors'
 
-def doctor_detail(request, user_id):
-    doctor = get_object_or_404(Doctor, user__id=user_id)
-    return render(request, 'myapp/doctor_detail.html', {'doctor': doctor})
+class DoctorDetailView(DetailView):
+    model = Doctor
+    template_name = 'myapp/doctor_detail.html'
+    pk_url_kwarg = 'user_id'
 
-def register_doctor(request):
-    if request.method == 'POST':
-        form = DoctorRegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.user_type = 'doctor'
-            user.save()
-            Doctor.objects.create(user=user, specialization=form.cleaned_data['specialization'], experience=form.cleaned_data['experience'])
-            login(request, user)
-            return redirect('doctor_dashboard')
-    else:
-        form = DoctorRegistrationForm()
-    return render(request, 'myapp/register_doctor.html', {'form': form})
+    def get_object(self):
+        return get_object_or_404(Doctor, user__id=self.kwargs['user_id'])
 
-def register_patient(request):
-    if request.method == 'POST':
-        form = PatientRegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.user_type = 'patient'
-            user.save()
-            Patient.objects.create(user=user, age=form.cleaned_data['age'], medical_history=form.cleaned_data['medical_history'])
-            login(request, user)
-            return redirect('patient_dashboard')
-    else:
-        form = PatientRegistrationForm()
-    return render(request, 'myapp/register_patient.html', {'form': form})
+class RegisterDoctorView(CreateView):
+    form_class = DoctorRegistrationForm
+    template_name = 'myapp/register_doctor.html'
+    success_url = reverse_lazy('doctor_dashboard')
 
-def login_user(request):
-    if request.method == 'POST':
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.user_type = 'doctor'
+        user.save()
+        Doctor.objects.create(user=user, specialization=form.cleaned_data['specialization'], experience=form.cleaned_data['experience'])
+        login(self.request, user)
+        return super().form_valid(form)
+
+class RegisterPatientView(CreateView):
+    form_class = PatientRegistrationForm
+    template_name = 'myapp/register_patient.html'
+    success_url = reverse_lazy('patient_dashboard')
+
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.user_type = 'patient'
+        user.save()
+        Patient.objects.create(user=user, age=form.cleaned_data['age'], medical_history=form.cleaned_data['medical_history'])
+        login(self.request, user)
+        return super().form_valid(form)
+
+class LoginView(View):
+    def get(self, request):
+        return render(request, 'myapp/login.html')
+
+    def post(self, request):
         username = request.POST['username']
         password = request.POST['password']
         user = authenticate(username=username, password=password)
         if user is not None:
+            login(request, user)
             if user.user_type == 'patient':
-                login(request, user)
                 return redirect('patient_dashboard')
             elif user.user_type == 'doctor':
-                login(request, user)
                 return redirect('doctor_dashboard')
-            else:
-                return render(request, 'myapp/login.html', {'error': 'Invalid user type'})
         else:
             return render(request, 'myapp/login.html', {'error': 'Invalid credentials'})
-    else:
-        return render(request, 'myapp/login.html')
 
-@login_required(login_url='login')
-def doctor_dashboard(request):
-    appointments = Appointment.objects.filter(doctor__user=request.user)
-    schedule = Schedule.objects.filter(doctor__user=request.user)
-    return render(request, 'myapp/doctor_dashboard.html', {'appointments': appointments, 'schedule': schedule})
+class LogoutView(View):
+    def get(self, request):
+        logout(request)
+        return redirect('login')
 
-@login_required(login_url='login')
-def patient_dashboard(request):
-    appointments = Appointment.objects.filter(patient__user=request.user)
-    return render(request, 'myapp/patient_dashboard.html', {'appointments': appointments})
+class DoctorDashboardView(TemplateView):
+    template_name = 'myapp/doctor_dashboard.html'
 
-@login_required(login_url='login')
-def add_prescription(request, appointment_id):
-    appointment = get_object_or_404(Appointment, id=appointment_id)
-    if request.method == 'POST':
-        form = PrescriptionForm(request.POST, request.FILES, instance=appointment)
-        if form.is_valid():
-            form.save()
-            return redirect('doctor_dashboard')
-    else:
-        form = PrescriptionForm(instance=appointment)
-    return render(request, 'myapp/add_prescription.html', {'form': form})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        doctor = self.request.user.doctor
+        appointments = Appointment.objects.filter(doctor=doctor).order_by('date')
+        status_forms = [AppointmentStatusForm(instance=appointment) for appointment in appointments]
 
-def logout_user(request):
-    logout(request)
-    return redirect('login')
+        # Zip appointments and forms together
+        context['appointments_forms'] = zip_longest(appointments, status_forms, fillvalue=None)
+        return context
 
-@login_required(login_url='login')
-def book_appointment(request, doctor_id):
-    doctor = get_object_or_404(Doctor, user__id=doctor_id)
-    if request.method == 'POST':
-        form = AppointmentForm(request.POST)
-        if form.is_valid():
-            appointment = form.save(commit=False)
-            appointment.doctor = doctor
-            appointment.patient = get_object_or_404(Patient, user=request.user)
-            appointment.status = 'pending'
-            appointment.save()
-            return redirect('patient_dashboard')
-    else:
-        form = AppointmentForm()
-    return render(request, 'myapp/book_appointment.html', {'form': form, 'doctor': doctor})
-
-@login_required(login_url='login')
-def download_prescription(request, id):
-    try:
-        appointment = Appointment.objects.get(id=id)
-        if appointment.prescription_file:
-            file_path = default_storage.path(appointment.prescription_file.name)
-            if os.path.exists(file_path):
-                response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
-                response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-                response['Content-Length'] = os.path.getsize(file_path)
-                return response
+    def post(self, request, *args, **kwargs):
+    # Check if the form is submitted to change the appointment status
+        if 'change_status' in request.POST:
+            appointment_id = request.POST.get('appointment_id')
+            appointment = get_object_or_404(Appointment, id=appointment_id)
+            form = AppointmentStatusForm(request.POST, instance=appointment)
+            if form.is_valid():
+                form.save()
+                # Redirect to avoid re-posting data on page refresh
+                return redirect(reverse('doctor_dashboard'))
             else:
-                raise Http404("Prescription file not found")
-        else:
-            raise Http404("No prescription file available")
-    except Appointment.DoesNotExist:
-        raise Http404("Appointment does not exist")
+                messages.error(request, "There was an error updating the appointment status.")
+                return self.get(request, *args, **kwargs)
+        
+        # Check if the form is submitted to upload a prescription
+        elif 'upload_prescription' in request.POST:
+            appointment_id = request.POST.get('appointment_id')
+            appointment = get_object_or_404(Appointment, id=appointment_id)
+            form = PrescriptionForm(request.POST, request.FILES, instance=appointment)
+            if form.is_valid():
+                form.save()
+                # Redirect to avoid re-posting data on page refresh
+                return redirect(reverse('doctor_dashboard'))
+            else:
+                messages.error(request, "There was an error uploading the prescription.")
+                return self.get(request, *args, **kwargs)
+
+        # Handle other POST requests if necessary
+        return super().post(request, *args, **kwargs)
 
 
-def rate_appointment(request, pk):
-    appointment = get_object_or_404(Appointment, pk=pk)
 
-    if request.method == 'POST':
-        form = RatingForm(request.POST, instance=appointment)
-        if form.is_valid():
-            form.save()
-            return redirect('patient_dashboard')  # Redirect to the dashboard or another appropriate page
-    else:
-        form = RatingForm(instance=appointment)
 
-    return render(request, 'myapp/rate_appointment.html', {'form': form})
+class PatientDashboardView(LoginRequiredMixin, ListView):
+    template_name = 'myapp/patient_dashboard.html'
+    context_object_name = 'appointments'
+    login_url = 'login'
+
+    def get_queryset(self):
+        return Appointment.objects.filter(patient__user=self.request.user)
+
+class AddPrescriptionView(LoginRequiredMixin, UpdateView):
+    model = Appointment
+    form_class = PrescriptionForm
+    template_name = 'myapp/add_prescription.html'
+    pk_url_kwarg = 'appointment_id'
+    success_url = reverse_lazy('doctor_dashboard')
+    login_url = 'login'
+
+class BookAppointmentView(LoginRequiredMixin, CreateView):
+    form_class = AppointmentForm
+    template_name = 'myapp/book_appointment.html'
+    login_url = 'login'
+
+    def form_valid(self, form):
+        doctor = get_object_or_404(Doctor, user__id=self.kwargs['doctor_id'])
+        appointment = form.save(commit=False)
+        appointment.doctor = doctor
+        appointment.patient = get_object_or_404(Patient, user=self.request.user)
+        appointment.status = 'pending'
+        appointment.save()
+        return redirect('patient_dashboard')
+
+class DownloadPrescriptionView(LoginRequiredMixin, View):
+    login_url = 'login'
+
+    def get(self, request, id):
+        try:
+            appointment = Appointment.objects.get(id=id)
+            if appointment.prescription_file:
+                file_path = default_storage.path(appointment.prescription_file.name)
+                if os.path.exists(file_path):
+                    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+                    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+                    response['Content-Length'] = os.path.getsize(file_path)
+                    return response
+                else:
+                    raise Http404("Prescription file not found")
+            else:
+                raise Http404("No prescription file available")
+        except Appointment.DoesNotExist:
+            raise Http404("Appointment does not exist")
+
+class RateAppointmentView(LoginRequiredMixin, UpdateView):
+    model = Appointment
+    form_class = RatingForm
+    template_name = 'myapp/rate_appointment.html'
+    success_url = reverse_lazy('patient_dashboard')
+    login_url = 'login'

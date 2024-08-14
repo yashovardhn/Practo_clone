@@ -36,3 +36,8 @@ class RatingForm(forms.ModelForm):
         widgets = {
             'rating': forms.TextInput(attrs={'class': 'input'}),
         }
+
+class AppointmentStatusForm(forms.ModelForm):
+    class Meta:
+        model = Appointment
+        fields = ['status'] 

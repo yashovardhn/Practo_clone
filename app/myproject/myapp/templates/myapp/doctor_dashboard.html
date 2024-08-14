@@ -1,42 +1,69 @@
-{% extends "myapp/base.html" %}
-
-{% block title %}Doctor Dashboard{% endblock %}
-
+{% extends 'myapp/base.html' %}
+{% load widget_tweaks %}
 {% block content %}
-<h2 class="title">Doctor Dashboard</h2>
-<h3 class="subtitle">Appointments</h3>
-<table class="table is-fullwidth is-striped">
-    <thead>
-        <tr>
-            <th>Patient</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Status</th>
-            <th>Rating</th>
-            <th>Prescription</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for appointment in appointments %}
-        <tr>
-            <td>{{ appointment.patient.user.username }}</td>
-            <td>{{ appointment.date }}</td>
-            <td>{{ appointment.time }}</td>
-            <td>{{ appointment.status }}</td>
-            <td>{{ appointment.rating }}</td>
-            <td>
-                {% if appointment.prescription_file %}
-                    <a class="button is-small is-link" href="{{ appointment.prescription_file.url }}">Download</a>
-                {% endif %}
-            </td>
-            <td>
-                {% if appointment.status == 'completed' %}
-                    <a class="button is-small is-primary" href="{% url 'add_prescription' appointment.id %}">Add Prescription</a>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="container mt-5">
+    <h1 class="title is-3">Doctor Dashboard</h1>
+    
+    <div class="box">
+        <table class="table is-fullwidth is-bordered is-striped is-hoverable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Change Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment, form in appointments_forms %}
+                <tr>
+                    <td>{{ appointment.date }}</td>
+                    <td>
+                        {% if form.status.value == 'Completed' %}
+                            <span class="tag is-success">{{ form.status }}</span>
+                        {% elif form.status.value == 'Pending' %}
+                            <span class="tag is-warning">{{ form.status }}</span>
+                        {% else %}
+                            <span class="tag is-danger">{{ form.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="{% url 'doctor_dashboard' %}" class="form-inline">
+                            {% csrf_token %}
+                            <div class="field is-inline">
+                                <div class="control">
+                                    {{ form.status|add_class:"input is-small" }}
+                                </div>
+                            </div>
+                            <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
+                            <button type="submit" class="button is-primary is-small">Update Status</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .tag.is-success {
+        background-color: #48c774;
+        color: #fff;
+    }
+    .tag.is-warning {
+        background-color: #ffdd57;
+        color: #fff;
+    }
+    .tag.is-danger {
+        background-color: #ff3860;
+        color: #fff;
+    }
+    .form-inline {
+        display: flex;
+        align-items: center;
+    }
+    .form-inline .field {
+        margin-right: 10px;
+    }
+</style>
 {% endblock %}

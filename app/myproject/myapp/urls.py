@@ -1,18 +1,17 @@
-# myapp/urls.py
 from django.urls import path
-from . import views
+from .views import DoctorDashboardView, PatientDashboardView, DoctorListView, DoctorDetailView, BookAppointmentView, RegisterDoctorView, RegisterPatientView, AddPrescriptionView, DownloadPrescriptionView, RateAppointmentView, LoginView, LogoutView
 
 urlpatterns = [
-    path('register/doctor/', views.register_doctor, name='register_doctor'),
-    path('register/patient/', views.register_patient, name='register_patient'),
-    path('doctor/dashboard/', views.doctor_dashboard, name='doctor_dashboard'),
-    path('patient/dashboard/', views.patient_dashboard, name='patient_dashboard'),
-    path('appointment/<int:appointment_id>/prescription/', views.add_prescription, name='add_prescription'),
-    path('appointment/book/<int:doctor_id>/', views.book_appointment, name='book_appointment'),  # New URL for booking appointment
-    path('logout/', views.logout_user, name='logout'),
-    path('login/', views.login_user, name='login'),
-    path('', views.doctor_list, name='doctor_list'),
-    path('doctor/<int:user_id>/', views.doctor_detail, name='doctor_detail'),
-    path('prescription/<int:id>/', views.download_prescription, name='download_prescription'),
-    path('appointment/<int:pk>/rate/', views.rate_appointment, name='rate_appointment'),
+    path('register/doctor/', RegisterDoctorView.as_view(), name='register_doctor'),
+    path('register/patient/', RegisterPatientView.as_view(), name='register_patient'),
+    path('doctor-dashboard/', DoctorDashboardView.as_view(), name='doctor_dashboard'),
+    path('patient/dashboard/', PatientDashboardView.as_view(), name='patient_dashboard'),
+    path('appointment/<int:appointment_id>/prescription/', AddPrescriptionView.as_view(), name='add_prescription'),
+    path('appointment/book/<int:doctor_id>/', BookAppointmentView.as_view(), name='book_appointment'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('', DoctorListView.as_view(), name='doctor_list'),
+    path('doctor/<int:user_id>/', DoctorDetailView.as_view(), name='doctor_detail'),
+    path('prescription/<int:id>/', DownloadPrescriptionView.as_view(), name='download_prescription'),
+    path('appointment/<int:pk>/rate/', RateAppointmentView.as_view(), name='rate_appointment'),
 ]
