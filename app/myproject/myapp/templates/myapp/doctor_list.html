@@ -5,25 +5,23 @@
 {% block content %}
 <div class="container">
     <h2 class="title">List of Doctors</h2>
-    <table class="table is-fullwidth is-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Specialization</th>
-                <th>Experience</th>
-                <th>Profile</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for doctor in doctors %}
-            <tr>
-                <td>{{ doctor.user.username }}</td>
-                <td>{{ doctor.specialization }}</td>
-                <td>{{ doctor.experience }} years</td>
-                <td><a class="button is-link" href="{% url 'doctor_detail' doctor.user.id %}">View Profile</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="columns is-multiline">
+        {% for doctor in doctors %}
+        <div class="column is-one-third">
+            <div class="card">
+                <div class="card-content">
+                    <p class="title is-4">{{ doctor.user.username }}</p>
+                    <p class="subtitle is-6">{{ doctor.specialization }}</p>
+                    <div class="content">
+                        <p>Experience: {{ doctor.experience }} years</p>
+                    </div>
+                </div>
+                <footer class="card-footer">
+                    <a href="{% url 'doctor_detail' doctor.user.id %}" class="card-footer-item button is-link">View Profile</a>
+                </footer>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
