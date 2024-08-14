@@ -1,7 +1,9 @@
 # myapp/forms.py
 from django import forms
+from django.forms import modelformset_factory
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, Doctor, Patient, Appointment
+from .models import User, Doctor, Patient, Appointment, Prescription
+
 
 class DoctorRegistrationForm(UserCreationForm):
     specialization = forms.CharField(max_length=100)
@@ -21,8 +23,11 @@ class PatientRegistrationForm(UserCreationForm):
 
 class PrescriptionForm(forms.ModelForm):
     class Meta:
-        model = Appointment
-        fields = ['prescription_file']
+        model = Prescription
+        fields = ['file']
+
+PrescriptionFormSet = modelformset_factory(Prescription, form=PrescriptionForm, extra=1, can_delete=True)
+
 
 class AppointmentForm(forms.ModelForm):
     class Meta:
@@ -40,4 +45,4 @@ class RatingForm(forms.ModelForm):
 class AppointmentStatusForm(forms.ModelForm):
     class Meta:
         model = Appointment
-        fields = ['status'] 
+        fields = ['status']

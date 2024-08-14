@@ -32,6 +32,11 @@ class Appointment(models.Model):
     visit_details = models.TextField(null=True, blank=True)
     prescription_file = models.FileField(upload_to='prescriptions/', null=True, blank=True)  # Add this field
 
+class Prescription(models.Model):
+    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE)
+    file = models.FileField(upload_to='prescriptions/')
+
+
 class Schedule(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     day = models.CharField(max_length=10)

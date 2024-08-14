@@ -2,8 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm, AppointmentForm, RatingForm
-from .models import User, Doctor, Patient, Appointment, Schedule
+from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm, AppointmentForm, RatingForm,PrescriptionFormSet, AppointmentStatusForm
+from .models import User, Doctor, Patient, Appointment, Schedule, Prescription
 from django.urls import reverse_lazy
 from django.core.files.storage import default_storage
 from django.http import HttpResponse, FileResponse, Http404
@@ -83,10 +83,19 @@ class DoctorDashboardView(LoginRequiredMixin, ListView):
         context['schedule'] = Schedule.objects.filter(doctor__user=self.request.user)
         return context
 
-class AppointmentDetailView(DetailView):
-    model = Appointment
-    template_name = 'appointment_detail.html'  # Ensure this template exists
-    context_object_name = 'appointment'
+class UpdateAppointmentStatusView(LoginRequiredMixin, View):
+    login_url = 'login'
+
+    def post(self, request, *args, **kwargs):
+        appointment_id = self.kwargs.get('pk')
+        status = request.POST.get('status')
+        appointment = get_object_or_404(Appointment, pk=appointment_id, doctor__user=request.user)
+        
+        if status:
+            appointment.status = status
+            appointment.save()
+
+        return redirect('doctor_dashboard')
 
 
 class PatientDashboardView(LoginRequiredMixin, ListView):
@@ -97,13 +106,17 @@ class PatientDashboardView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Appointment.objects.filter(patient__user=self.request.user)
 
-class AddPrescriptionView(LoginRequiredMixin, UpdateView):
-    model = Appointment
-    form_class = PrescriptionForm
-    template_name = 'myapp/add_prescription.html'
-    pk_url_kwarg = 'appointment_id'
-    success_url = reverse_lazy('doctor_dashboard')
-    login_url = 'login'
+class AddPrescriptionView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        formset = PrescriptionFormSet(queryset=Prescription.objects.none())
+        return render(request, 'myapp/add_prescription.html', {'formset': formset})
+
+    def post(self, request, *args, **kwargs):
+        formset = PrescriptionFormSet(request.POST, request.FILES)
+        if formset.is_valid():
+            formset.save()
+            return redirect('doctor_dashboard')
+        return render(request, 'myapp/add_prescription.html', {'formset': formset})
 
 class BookAppointmentView(LoginRequiredMixin, CreateView):
     form_class = AppointmentForm

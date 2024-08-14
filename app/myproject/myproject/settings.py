@@ -64,6 +64,7 @@ TEMPLATES = [
 
 
 
+
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
 # Database
@@ -101,7 +102,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+# CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_ALLOWED_TEMPLATE_PACKS = ['bootstrap5']
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Default primary key field type

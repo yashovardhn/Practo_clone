@@ -1,83 +1,53 @@
-{% extends 'myapp/base.html' %}
+{% extends "myapp/base.html" %}
+
+{% block title %}Doctor Dashboard{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="title">Doctor Dashboard</h1>
-    
-    <!-- Appointments Section -->
-    <section class="section">
-        <div class="container">
-            <h2 class="subtitle">Upcoming Appointments</h2>
-            {% if appointments %}
-                <div class="box">
-                    <table class="table is-fullwidth">
-                        <thead>
-                            <tr>
-                                <th>Patient</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Status</th>
-                                <th>Details</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for appointment in appointments %}
-                                <tr>
-                                    <td>{{ appointment.patient.get_full_name }}</td>
-                                    <td>{{ appointment.date }}</td>
-                                    <td>{{ appointment.time }}</td>
-                                    <td>{{ appointment.get_status_display }}</td>
-                                    <td><a href="{% url 'appointment_detail' appointment.id %}" class="button is-link is-small">View Details</a></td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="5">No upcoming appointments.</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <p>No appointments found.</p>
-            {% endif %}
-        </div>
-    </section>
-    
-    <!-- Schedule Section -->
-    <section class="section">
-        <div class="container">
-            <h2 class="subtitle">Your Schedule</h2>
-            {% if schedule %}
-                <div class="box">
-                    <table class="table is-fullwidth">
-                        <thead>
-                            <tr>
-                                <th>Day</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Slot Duration</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for slot in schedule %}
-                                <tr>
-                                    <td>{{ slot.day }}</td>
-                                    <td>{{ slot.start_time }}</td>
-                                    <td>{{ slot.end_time }}</td>
-                                    <td>{{ slot.slot_duration }} minutes</td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="4">No schedule available.</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <p>No schedule found.</p>
-            {% endif %}
-        </div>
-    </section>
-</div>
+<h2 class="title">Doctor Dashboard</h2>
+<h3 class="subtitle">Appointments</h3>
+<table class="table is-fullwidth is-striped">
+    <thead>
+        <tr>
+            <th>Patient</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Rating</th>
+            <th>Prescription</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for appointment in appointments %}
+        <tr>
+            <td>{{ appointment.patient.user.username }}</td>
+            <td>{{ appointment.date }}</td>
+            <td>{{ appointment.time }}</td>
+            <td>{{ appointment.status }}</td>
+            <td>{{ appointment.rating }}</td>
+            <td>
+                {% if appointment.prescription_file %}
+                    <a class="button is-small is-link" href="{{ appointment.prescription_file.url }}">Download</a>
+                {% endif %}
+            </td>
+            <td>
+                {% if appointment.status == 'completed' %}
+                    <a class="button is-small is-primary" href="{% url 'add_prescription' appointment.id %}">Add Prescription</a>
+                {% elif appointment.status == 'pending' %}
+                    <form action="{% url 'update_status' appointment.id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <div class="select">
+                            <select name="status" onchange="this.form.submit()">
+                                <option value="">Change Status</option>
+                                <option value="completed" {% if appointment.status == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="canceled" {% if appointment.status == 'canceled' %}selected{% endif %}>Canceled</option>
+                            </select>
+                        </div>
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}
