@@ -1,15 +1,13 @@
-from pyexpat.errors import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, View, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm, AppointmentForm, RatingForm, AppointmentStatusForm
+from .forms import DoctorRegistrationForm, PatientRegistrationForm, PrescriptionForm, AppointmentForm, RatingForm
 from .models import User, Doctor, Patient, Appointment, Schedule
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy
 from django.core.files.storage import default_storage
 from django.http import HttpResponse, FileResponse, Http404
 import os
-from itertools import zip_longest
 
 class DoctorListView(ListView):
     model = Doctor
@@ -72,50 +70,23 @@ class LogoutView(View):
         logout(request)
         return redirect('login')
 
-class DoctorDashboardView(TemplateView):
+class DoctorDashboardView(LoginRequiredMixin, ListView):
     template_name = 'myapp/doctor_dashboard.html'
+    context_object_name = 'appointments'
+    login_url = 'login'
+
+    def get_queryset(self):
+        return Appointment.objects.filter(doctor__user=self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        doctor = self.request.user.doctor
-        appointments = Appointment.objects.filter(doctor=doctor).order_by('date')
-        status_forms = [AppointmentStatusForm(instance=appointment) for appointment in appointments]
-
-        # Zip appointments and forms together
-        context['appointments_forms'] = zip_longest(appointments, status_forms, fillvalue=None)
+        context['schedule'] = Schedule.objects.filter(doctor__user=self.request.user)
         return context
 
-    def post(self, request, *args, **kwargs):
-    # Check if the form is submitted to change the appointment status
-        if 'change_status' in request.POST:
-            appointment_id = request.POST.get('appointment_id')
-            appointment = get_object_or_404(Appointment, id=appointment_id)
-            form = AppointmentStatusForm(request.POST, instance=appointment)
-            if form.is_valid():
-                form.save()
-                # Redirect to avoid re-posting data on page refresh
-                return redirect(reverse('doctor_dashboard'))
-            else:
-                messages.error(request, "There was an error updating the appointment status.")
-                return self.get(request, *args, **kwargs)
-        
-        # Check if the form is submitted to upload a prescription
-        elif 'upload_prescription' in request.POST:
-            appointment_id = request.POST.get('appointment_id')
-            appointment = get_object_or_404(Appointment, id=appointment_id)
-            form = PrescriptionForm(request.POST, request.FILES, instance=appointment)
-            if form.is_valid():
-                form.save()
-                # Redirect to avoid re-posting data on page refresh
-                return redirect(reverse('doctor_dashboard'))
-            else:
-                messages.error(request, "There was an error uploading the prescription.")
-                return self.get(request, *args, **kwargs)
-
-        # Handle other POST requests if necessary
-        return super().post(request, *args, **kwargs)
-
-
+class AppointmentDetailView(DetailView):
+    model = Appointment
+    template_name = 'appointment_detail.html'  # Ensure this template exists
+    context_object_name = 'appointment'
 
 
 class PatientDashboardView(LoginRequiredMixin, ListView):
