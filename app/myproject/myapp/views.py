@@ -119,19 +119,17 @@ class UploadPrescriptionView(LoginRequiredMixin, FormView):
         prescription.save()
         return redirect('doctor_dashboard')
 
-logger = logging.getLogger(__name__)
-
 class DownloadPrescriptionView(LoginRequiredMixin, View):
     login_url = 'login'
 
     def get(self, request, *args, **kwargs):
         prescription_id = self.kwargs.get('id')
         try:
-            prescription = get_object_or_404(Prescription, id=prescription_id)
+            prescription = Prescription.objects.get(id=prescription_id)
             if prescription.file:
                 file_path = prescription.file.path
-                logger.debug(f"File path: {file_path}")  # Debugging line
-                if os.path.isfile(file_path):
+                print(f"Attempting to access file at: {file_path}")  # Debug line
+                if os.path.exists(file_path):
                     response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
                     response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
                     return response

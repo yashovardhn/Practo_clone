@@ -36,7 +36,6 @@ class Prescription(models.Model):
     file = models.FileField(upload_to='prescriptions/')
 
 
-
 class Schedule(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     day = models.CharField(max_length=10)
