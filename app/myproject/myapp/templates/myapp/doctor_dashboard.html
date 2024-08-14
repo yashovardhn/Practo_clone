@@ -27,11 +27,10 @@
             <td>{{ appointment.rating }}</td>
             <td>
                 {% if appointment.prescription_file %}
-                    <a class="button is-small is-link" href="{% url 'download_prescription' appointment.id %}">Download</a>
-                {% else %}
-                    No Prescription
+                    <a class="button is-small is-link" href="{% url 'download_prescription' appointment.prescription.id %}">Download</a>
                 {% endif %}
             </td>
+            
             <td>
                 {% if appointment.status == 'completed' %}
                     <a class="button is-small is-primary" href="{% url 'upload_prescription' appointment.id %}">Add Prescription</a>

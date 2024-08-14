@@ -107,9 +107,9 @@ class PatientDashboardView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Appointment.objects.filter(patient__user=self.request.user)
 
-class UploadPrescriptionView(LoginRequiredMixin,FormView):
+class UploadPrescriptionView(LoginRequiredMixin, FormView):
     form_class = PrescriptionForm
-    template_name = 'myapp/add_prescription.html'
+    template_name = 'myapp/upload_prescription.html'
 
     def form_valid(self, form):
         appointment_id = self.kwargs.get('appointment_id')
@@ -118,6 +118,29 @@ class UploadPrescriptionView(LoginRequiredMixin,FormView):
         prescription.appointment = appointment
         prescription.save()
         return redirect('doctor_dashboard')
+
+logger = logging.getLogger(__name__)
+
+class DownloadPrescriptionView(LoginRequiredMixin, View):
+    login_url = 'login'
+
+    def get(self, request, *args, **kwargs):
+        prescription_id = self.kwargs.get('id')
+        try:
+            prescription = get_object_or_404(Prescription, id=prescription_id)
+            if prescription.file:
+                file_path = prescription.file.path
+                logger.debug(f"File path: {file_path}")  # Debugging line
+                if os.path.isfile(file_path):
+                    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+                    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+                    return response
+                else:
+                    raise Http404("Prescription file not found")
+            else:
+                raise Http404("No prescription file available")
+        except Prescription.DoesNotExist:
+            raise Http404("Prescription does not exist")
 
 
 class BookAppointmentView(LoginRequiredMixin, CreateView):
@@ -134,27 +157,7 @@ class BookAppointmentView(LoginRequiredMixin, CreateView):
         appointment.save()
         return redirect('patient_dashboard')
 
-class DownloadPrescriptionView(LoginRequiredMixin, View):
-    login_url = 'login'
 
-    def get(self, request, id):
-        try:
-            prescription = Prescription.objects.get(id=id)
-            if prescription.file:
-                file_path = default_storage.path(prescription.file.name)
-                logging.debug(f"File path: {file_path}")
-
-                if os.path.isfile(file_path):
-                    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
-                    response['Content-Disposition'] = f'inline; filename="{os.path.basename(file_path)}"'
-                    response['Content-Length'] = os.path.getsize(file_path)
-                    return response
-                else:
-                    raise Http404("Prescription file not found")
-            else:
-                raise Http404("No prescription file available")
-        except Prescription.DoesNotExist:
-            raise Http404("Prescription does not exist")
 
 
 class RateAppointmentView(LoginRequiredMixin, UpdateView):
