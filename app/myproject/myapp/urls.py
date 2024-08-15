@@ -17,5 +17,5 @@ urlpatterns = [
     path('update_status/<int:pk>/', UpdateAppointmentStatusView.as_view(), name='update_status'),
     path('upload-prescription/<int:appointment_id>/', UploadPrescriptionView.as_view(), name='upload_prescription'),
      path('download-prescription/<int:id>/', DownloadPrescriptionView.as_view(), name='download_prescription'),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
