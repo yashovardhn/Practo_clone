@@ -143,10 +143,10 @@ class DownloadPrescriptionView(LoginRequiredMixin, View):
                 file_path = prescription.file.path
                 if os.path.exists(file_path):
                     # Open the file in binary mode
-                    file_handle = open(file_path, 'rb')
-                    response = FileResponse(file_handle, content_type='application/pdf')
-                    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-                    return response
+                    with open(file_path, 'rb') as file_handle:
+                        response = FileResponse(file_handle, content_type='application/pdf')
+                        response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+                        return response
                 else:
                     raise Http404("Prescription file not found")
             else:
