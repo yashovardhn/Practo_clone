@@ -32,7 +32,7 @@
                         {% if appointment.prescription.file %}
                                 <a class="button is-small is-link" href="{% url 'download_prescription' appointment.prescription.id %}" download>Download</a>
                             {% else %}
-                                <span class="button is-small is-link is-disabled">No File</span>
+                                <span class="button is-small is-link is-disabled">No Prescription</span>
                         {% endif %}
                     </td>
                     <td>
