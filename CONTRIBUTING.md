@@ -59,10 +59,6 @@ We welcome contributions to the DocLink project! Here’s how you can help:
 
 If you encounter any issues or bugs, please report them using the [issue tracker](https://github.com/yashovardhn/DocLink/issues). Provide as much detail as possible to help us understand and address the problem.
 
-## Code of Conduct
-
-By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md). Please read it to understand our expectations and guidelines for respectful and inclusive behavior.
-
 ## Thank You!
 
 Thank you for contributing to DocLink! Your efforts are greatly appreciated and help make the project better for everyone.
