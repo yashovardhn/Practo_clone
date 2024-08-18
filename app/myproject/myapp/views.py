@@ -114,10 +114,23 @@ class UploadPrescriptionView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         appointment_id = self.kwargs.get('appointment_id')
         appointment = get_object_or_404(Appointment, id=appointment_id)
+        
+        # Check if a prescription already exists for this appointment
+        try:
+            existing_prescription = Prescription.objects.get(appointment=appointment)
+            if existing_prescription.file:
+                existing_prescription.file.delete(save=False)  # Delete the existing file
+            existing_prescription.delete()  # Delete the existing prescription instance
+        except Prescription.DoesNotExist:
+            pass  # If no existing prescription, proceed normally
+
+        # Save the new prescription
         prescription = form.save(commit=False)
         prescription.appointment = appointment
         prescription.save()
+        
         return redirect('doctor_dashboard')
+
 
 class DownloadPrescriptionView(LoginRequiredMixin, View):
     login_url = 'login'
@@ -128,9 +141,10 @@ class DownloadPrescriptionView(LoginRequiredMixin, View):
             prescription = Prescription.objects.get(id=prescription_id)
             if prescription.file:
                 file_path = prescription.file.path
-                print(f"Attempting to access file at: {file_path}")  # Debug line
                 if os.path.exists(file_path):
-                    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+                    # Open the file in binary mode
+                    file_handle = open(file_path, 'rb')
+                    response = FileResponse(file_handle, content_type='application/pdf')
                     response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
                     return response
                 else:
@@ -139,6 +153,10 @@ class DownloadPrescriptionView(LoginRequiredMixin, View):
                 raise Http404("No prescription file available")
         except Prescription.DoesNotExist:
             raise Http404("Prescription does not exist")
+        except Exception as e:
+            # Log the exception or use a logging library
+            print(f"An error occurred: {e}")
+            raise Http404("An error occurred while processing your request")
 
 
 class BookAppointmentView(LoginRequiredMixin, CreateView):

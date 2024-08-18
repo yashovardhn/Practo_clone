@@ -29,18 +29,15 @@
                     <td>{{ appointment.status }}</td>
                     <td>{{ appointment.rating|default:"No Rating" }}</td>
                     <td>
-                        {% if appointment.prescription_file %}
-                        <a class="button is-small is-link" href="{% url 'download_prescription' appointment.id %}"
-                            download>Download</a>
+                        {% if appointment.prescription %}
+                        <a class="button is-small is-link" href="{% url 'download_prescription' appointment.prescription.id %}" download>Download</a>
                         {% else %}
                         <a class="button is-small is-link is-disabled">No Prescription</a>
                         {% endif %}
-
                     </td>
                     <td>
                         {% if appointment.status == 'completed' and not appointment.rating %}
-                        <a class="button is-small is-warning" href="{% url 'rate_appointment' appointment.id %}">Rate
-                            Doctor</a>
+                        <a class="button is-small is-warning" href="{% url 'rate_appointment' appointment.id %}">Rate Doctor</a>
                         {% endif %}
                     </td>
                 </tr>

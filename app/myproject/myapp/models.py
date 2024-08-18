@@ -32,8 +32,10 @@ class Appointment(models.Model):
     visit_details = models.TextField(null=True, blank=True)  
 
 class Prescription(models.Model):
-    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE)
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE)
     file = models.FileField(upload_to='prescriptions/')
+    # Other fields...
+
 
 
 class Schedule(models.Model):
