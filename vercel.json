@@ -1,0 +1,27 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "manage.py",
+            "use": "@vercel/python",
+            "config": {
+                "maxLambdaSize": "50mb"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "manage.py"
+        }
+    ],
+    "env": {
+        "DJANGO_SETTINGS_MODULE": "DocLink.settings",
+        "DATABASE_URL": "your_database_url",
+        "SECRET_KEY": "your_secret_key",
+        "DEBUG": "false",
+        "AWS_ACCESS_KEY_ID": "your_aws_access_key_id",
+        "AWS_SECRET_ACCESS_KEY": "your_aws_secret_access_key",
+        "AWS_STORAGE_BUCKET_NAME": "your_aws_bucket_name"
+    }
+}
