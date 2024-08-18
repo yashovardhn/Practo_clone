@@ -142,11 +142,9 @@ class DownloadPrescriptionView(LoginRequiredMixin, View):
             if prescription.file:
                 file_path = prescription.file.path
                 if os.path.exists(file_path):
-                    # Open the file in binary mode
-                    with open(file_path, 'rb') as file_handle:
-                        response = FileResponse(file_handle, content_type='application/pdf')
-                        response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-                        return response
+                    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+                    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+                    return response
                 else:
                     raise Http404("Prescription file not found")
             else:
@@ -157,6 +155,7 @@ class DownloadPrescriptionView(LoginRequiredMixin, View):
             # Log the exception or use a logging library
             print(f"An error occurred: {e}")
             raise Http404("An error occurred while processing your request")
+
 
 
 class BookAppointmentView(LoginRequiredMixin, CreateView):

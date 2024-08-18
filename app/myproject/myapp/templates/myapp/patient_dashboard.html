@@ -29,14 +29,10 @@
                     <td>{{ appointment.status }}</td>
                     <td>{{ appointment.rating|default:"No Rating" }}</td>
                     <td>
-                        {% if appointment.prescription %}
-                            {% if appointment.prescription.file %}
+                        {% if appointment.prescription.file %}
                                 <a class="button is-small is-link" href="{% url 'download_prescription' appointment.prescription.id %}" download>Download</a>
                             {% else %}
                                 <span class="button is-small is-link is-disabled">No File</span>
-                            {% endif %}
-                        {% else %}
-                            <span class="button is-small is-link is-disabled">No Prescription</span>
                         {% endif %}
                     </td>
                     <td>
