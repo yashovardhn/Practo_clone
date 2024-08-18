@@ -1,2 +1,4 @@
 /virtenv
 app/myproject/myproject
+vercel.json
+app/myproject/myproject/build_file.sh
